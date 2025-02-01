@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Comunication LTD{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* 🎨 עיצוב הרקע */
+        body {
+            background: linear-gradient(to right, #85FFBD, #FFFB7D); /* 🌞 ירוק-צהוב במצב רגיל */
+            color: #333;
+            font-family: Arial, sans-serif;
+            transition: background 0.4s ease-in-out, color 0.4s ease-in-out;
+        }
+
+        /* 🏷️ עיצוב פס עליון */
+        .navbar {
+            background: rgba(0, 0, 0, 0.7); /* שחור שקוף */
+            color: white;
+            padding: 15px 20px;
+            font-size: 22px;
+            font-weight: bold;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-title {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        /* 🎛️ כפתור מצב כהה */
+        .dark-mode-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 15px;
+        }
+
+        /* 🔥 התאמה לקונטיינר */
+        .content-container {
+            margin-top: 80px; /* מרווח למטה בגלל ה-Header */
+            text-align: center;
+        }
+
+        /* 🌑 מצב כהה - רקע כחול כהה/שחור */
+        body.dark-mode {
+            background: linear-gradient(to right, #0F2027, #203A43, #2C5364); /* 🌙 כחול כהה-שחור */
+            color: #ffffff;
+        }
+        .dark-mode .form-control {
+            background-color: #2c2c2c;
+            color: #ffffff;
+            border: 1px solid #444;
+        }
+        .dark-mode .btn {
+            background-color: #444;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔝 פס עליון עם שם העבודה וכפתור מצב כהה -->
+    <div class="navbar">
+        <span class="navbar-title">Communication LTD</span>
+        <button id="theme-toggle" class="dark-mode-toggle">🌙 Dark Mode</button>
+    </div>
+
+    <div class="container content-container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const toggleButton = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // בדיקה אם המשתמש השתמש במצב כהה בעבר
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+            toggleButton.textContent = '☀️ Light Mode';
+        }
+
+        toggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                toggleButton.textContent = '☀️ Light Mode';
+            } else {
+                localStorage.setItem('theme', 'light');
+                toggleButton.textContent = '🌙 Dark Mode';
+            }
+        });
+    </script>
+
+</body>
+</html>

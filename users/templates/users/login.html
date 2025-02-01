@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <h2 class="text-center mb-4">Login</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form method="post" class="p-4 border rounded bg-light">
+                {% csrf_token %}
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username:</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div class="text-center mt-3">
+                <a href="{% url 'forgot_password' %}" class="btn btn-link">Forgot Password?</a>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{% url 'register' %}" class="btn btn-secondary w-100">Create New User</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

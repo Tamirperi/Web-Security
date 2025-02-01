@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center">Customer List</h2>
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Phone Number</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    {% if SECURITY_MODE %}
+                        <!-- מצב מאובטח - מציג טקסט נקי -->
+                        <td>{{ customer.0 }}</td>
+                        <td>{{ customer.1 }}</td>
+                        <td>{{ customer.2 }}</td>
+                        <td>{{ customer.3 }}</td>
+                    {% else %}
+                        <!-- מצב פגיע - מאפשר HTML (XSS) -->
+                        <td>{{ customer.0|safe }}</td>
+                        <td>{{ customer.1|safe }}</td>
+                        <td>{{ customer.2|safe }}</td>
+                        <td>{{ customer.3|safe }}</td>
+                    {% endif %}
+
+                    <td>
+                        <a href="{% url 'update_customer' customer.0 %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'delete_customer' customer.0 %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-4 d-flex justify-content-between">
+            <a href="/add-customer/" class="btn btn-primary">Add New Customer</a>
+            <div>
+                <a href="{% url 'change_password' %}" class="btn btn-warning me-2">Change Password</a>
+                <a href="{% url 'logout' %}" class="btn btn-secondary me-2">Logout</a>
+                <a href="{% url 'delete_user' request.session.user_id %}" class="btn btn-danger" onclick="confirmDelete(event)">Delete My Account</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(event) {
+            event.preventDefault();
+            if (confirm("Are you sure you want to delete your account?")) {
+                window.location.href = event.target.href;
+            }
+        }
+    </script>
+{% endblock %}
