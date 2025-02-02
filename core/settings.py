@@ -32,6 +32,17 @@ SECURITY_MODE = True # מצב בטוח ופגיע  True/False
 ############################
 # Application definition
 
+# מספר ניסיונות כניסה מותרות לפני חסימה
+MAX_LOGIN_ATTEMPTS = 3  
+
+# זמן חסימה בדקות לאחר כישלון
+LOCKOUT_DURATION = 2 
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = 'emails/'  # הנתיב לתיקייה שבה יאוחסנו המיילים
+
+
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
