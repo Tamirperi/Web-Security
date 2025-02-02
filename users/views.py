@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils.timezone import now
+import datetime
 
 
 def home_view(request):
@@ -130,6 +132,20 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
 
+        # הבאת ניסיונות כושלים מה-Session
+        failed_attempts = request.session.get('failed_attempts', 0)
+        lockout_until = request.session.get('lockout_until')
+
+        # אם המשתמש נעול - בדיקה אם הזמן עבר
+        if lockout_until:
+            lockout_time = datetime.datetime.strptime(lockout_until, "%Y-%m-%d %H:%M:%S")
+            if now() < lockout_time:
+                return render(request, 'users/login.html', {'error': 'Too many failed attempts. Try again later.'})
+            else:
+                # אם הזמן עבר - ננקה את החסימה
+                request.session['failed_attempts'] = 0
+                request.session['lockout_until'] = None
+
         if getattr(settings, 'SECURITY_MODE', True):  # אם SECURITY_MODE מופעל, מצב מאובטח
             with connection.cursor() as cursor:
                 cursor.execute("SELECT id, password FROM users WHERE username = %s", [username])
@@ -139,6 +155,7 @@ def login_view(request):
                 stored_password = user[1]
                 if check_password(password, stored_password):  # בדיקת סיסמה מול HASH
                     request.session['user_id'] = user[0]
+                    request.session['failed_attempts'] = 0  # איפוס מונה ניסיונות כושלים
                     return redirect('customer_list')
         else:
             # מצב **פגיע**: שימוש בשאילתה ישירה
@@ -151,14 +168,22 @@ def login_view(request):
 
             if user:
                 request.session['user_id'] = user[0]
+                request.session['failed_attempts'] = 0  # איפוס מונה ניסיונות כושלים
                 return redirect('customer_list')
+
+        # אם ההתחברות נכשלה, להעלות מונה ניסיונות כושלים
+        failed_attempts += 1
+        request.session['failed_attempts'] = failed_attempts
+
+        # אם עברנו את מספר הניסיונות המותר -> חסימה זמנית
+        if failed_attempts >= settings.MAX_LOGIN_ATTEMPTS:
+            lockout_time = now() + datetime.timedelta(minutes=settings.LOCKOUT_DURATION)
+            request.session['lockout_until'] = lockout_time.strftime("%Y-%m-%d %H:%M:%S")
+            return render(request, 'users/login.html', {'error': 'Too many failed attempts. Locked for a few minutes.'})
 
         return render(request, 'users/login.html', {'error': 'Invalid username or password'})
 
     return render(request, 'users/login.html')
-
-
-
 
 
 def change_password(request):
@@ -216,9 +241,18 @@ def forgot_password(request):
                     [hashed_code, email]
                 )
 
-            # הצגת הקוד על המסך
+            # יצירת התיקייה אם היא לא קיימת
+            email_dir = os.path.join(settings.BASE_DIR, 'emails')
+            os.makedirs(email_dir, exist_ok=True)
+            email_file_path = os.path.join(email_dir, 'emails.txt')
+
+            # שמירת המייל והקוד בקובץ
+            with open(email_file_path, 'a') as file:
+                file.write(f"Email: {email}, Reset Code: {reset_code}\n")
+
+            # הצגת הקוד גם על המסך וגם הודעה על שליחה למייל
             return render(request, 'users/forgot_password.html', {
-                'success': f'Your reset code is: {reset_code}'
+                'success': f'Your reset code is: {reset_code} (Also sent to email)'
             })
         else:
             # המייל לא נמצא במערכת
@@ -227,6 +261,7 @@ def forgot_password(request):
             })
 
     return render(request, 'users/forgot_password.html')
+
 
 def reset_password(request):
     if request.method == 'POST':
